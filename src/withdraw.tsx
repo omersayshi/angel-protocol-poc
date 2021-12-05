@@ -16,8 +16,8 @@ export function Withdraw() {
 
   const angelWallet:string = "terra13au3ag9df7khs2sv7m485e5c5vfwwftlrzf7cw";
 
-  function filterCoinLogic (c: Coin, withdrawLimit: number): Boolean {
-    if (c.denom !== 'uusd') {
+  function filterCoinLogic (c: Coin, withdrawLimit: number): boolean {
+    if (c.denom !== 'uusd' && c.denom !== 'uluna') {
       return Number(lcd?.market.swapRate(c, "uusd")) < withdrawLimit
     }
     return false;
@@ -25,9 +25,7 @@ export function Withdraw() {
   const checkDust = () => {
     if (withdrawLimit && connectedWallet) {
       lcd?.bank.balance(connectedWallet.walletAddress).then((coins) => {
-        setWithdraw(coins.filter((coin) => 
-          Number(lcd.market.swapRate(coin, "uusd")) < withdrawLimit
-        ));
+        setWithdraw(coins.filter((coin) => filterCoinLogic(coin, withdrawLimit)));
       });
     }
   }
