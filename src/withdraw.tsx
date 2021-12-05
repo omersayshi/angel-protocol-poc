@@ -14,9 +14,14 @@ export function Withdraw() {
   
   const [txResult, setTxResult] = useState<null | TxResult>(null);
 
-  const angelWallet:string = "omer";
+  const angelWallet:string = "terra13au3ag9df7khs2sv7m485e5c5vfwwftlrzf7cw";
 
-
+  function filterCoinLogic (c: Coin, withdrawLimit: number): Boolean {
+    if (c.denom !== 'uusd') {
+      return Number(lcd?.market.swapRate(c, "uusd")) < withdrawLimit
+    }
+    return false;
+  }
   const checkDust = () => {
     if (withdrawLimit && connectedWallet) {
       lcd?.bank.balance(connectedWallet.walletAddress).then((coins) => {
