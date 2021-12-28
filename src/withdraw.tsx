@@ -16,16 +16,27 @@ export function Withdraw() {
 
   const angelWallet:string = "terra13au3ag9df7khs2sv7m485e5c5vfwwftlrzf7cw";
 
-  function filterCoinLogic (c: Coin, withdrawLimit: number): boolean {
+  async function filterCoinLogic (c: Coin, withdrawLimit: number): Promise<boolean> {
+    console.log("checking", c);
     if (c.denom !== 'uusd' && c.denom !== 'uluna') {
-      return Number(lcd?.market.swapRate(c, "uusd")) < withdrawLimit
+      const result = await lcd?.market.swapRate(c, "uusd");
+      console.log('yeah so', JSON.parse(result?.toJSON() as string).amount);
+      console.log('yeah so 2', Number(JSON.parse(result?.toJSON() as string).amount) < (withdrawLimit * 1000000));
+      return Number(JSON.parse(result?.toJSON() as string).amount) < (withdrawLimit * 1000000)
     }
     return false;
   }
   const checkDust = () => {
     if (withdrawLimit && connectedWallet) {
-      lcd?.bank.balance(connectedWallet.walletAddress).then((coins) => {
-        setWithdraw(coins.filter((coin) => filterCoinLogic(coin, withdrawLimit)));
+      lcd?.bank.balance(connectedWallet.walletAddress).then(async (coins) => {
+        console.log("baby george", withdraw);
+        let res: Coin[] = [];
+        for(let coin of coins.toArray()){
+          const filter = await filterCoinLogic(coin, withdrawLimit);
+          if (filter) res.push(coin);
+        }
+        setWithdraw(new Coins(res));
+        console.log("curious george", withdraw);
       });
     }
   }
@@ -77,12 +88,12 @@ export function Withdraw() {
     <div>
       <h1>Withdraw Sample</h1>
       <div style={{fontSize: "15px"}}>
-        {bank && <pre>{bank}</pre>}
+        {bank && <pre>Balance: {bank}</pre>}
         {!connectedWallet && <p>Wallet not connected!</p>}
-        {connectedWallet && withdraw && <pre>{withdraw.toString()}</pre>}
+        {connectedWallet && withdraw && <pre> Dust Balance: {withdraw.toString()}</pre>}
         <input style={{width: '150px'}} type="number" onChange={(e) => setWithdrawLimit(Number(e.currentTarget.value))} />
-        <button onClick={() => checkDust()}> Check Dust</button>
-        <button onClick={() => makeTransaction()}> Withdraw</button>
+        <button style={{ marginLeft: '5px' }} onClick={() => checkDust()}> Check Dust</button>
+        <button style={{ marginLeft: '5px' }} onClick={() => makeTransaction()}> Withdraw</button>
       </div>
     </div>
   );
