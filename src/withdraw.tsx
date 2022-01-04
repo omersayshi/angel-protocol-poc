@@ -4,6 +4,7 @@ import {
   TxResult,
 } from '@terra-money/wallet-provider';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { constants } from './constants';
 
 export function Withdraw() {
   const connectedWallet = useConnectedWallet();
@@ -12,16 +13,12 @@ export function Withdraw() {
   const [withdrawLimit, setWithdrawLimit] = useState<null | number>();
   const [withdraw, setWithdraw] = useState<null | Coins>();
   
-  const [txResult, setTxResult] = useState<null | TxResult>(null);
-
-  const angelWallet:string = "terra13au3ag9df7khs2sv7m485e5c5vfwwftlrzf7cw";
+  const [_, setTxResult] = useState<null | TxResult>(null);
 
   async function filterCoinLogic (c: Coin, withdrawLimit: number): Promise<boolean> {
     console.log("checking", c);
     if (c.denom !== 'uusd' && c.denom !== 'uluna') {
       const result = await lcd?.market.swapRate(c, "uusd");
-      console.log('yeah so', JSON.parse(result?.toJSON() as string).amount);
-      console.log('yeah so 2', Number(JSON.parse(result?.toJSON() as string).amount) < (withdrawLimit * 1000000));
       return Number(JSON.parse(result?.toJSON() as string).amount) < (withdrawLimit * 1000000)
     }
     return false;
@@ -36,7 +33,6 @@ export function Withdraw() {
           if (filter) res.push(coin);
         }
         setWithdraw(new Coins(res));
-        console.log("curious george", withdraw);
       });
     }
   }
@@ -46,9 +42,9 @@ export function Withdraw() {
     if (withdraw && connectedWallet) {
       connectedWallet
       .post({
-        fee: new StdFee(1000000, '200000uusd'),
+        fee: new StdFee(1000000, '200000uluna'),
         msgs: [
-          new MsgSend(connectedWallet.walletAddress, angelWallet, withdraw),
+          new MsgSend(connectedWallet.walletAddress, constants.angelAddy, withdraw),
         ],
       })
       .then((nextTxResult: TxResult) => {

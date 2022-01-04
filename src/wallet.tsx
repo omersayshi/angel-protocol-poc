@@ -28,7 +28,7 @@ export function Wallet() {
 
 
   return (
-    <div>
+    <div style={{fontSize: "20px"}}>
       <h1>Connect Wallet</h1>
       <p>
       {JSON.stringify(
